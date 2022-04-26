@@ -5,11 +5,12 @@ from django.contrib.auth.forms import PasswordChangeForm, AuthenticationForm
 from rest_framework import viewsets, status
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from authentication.forms import UserCreationForm, UserChangeForm
+from authentication.models import User
 from authentication.serializers import UserSerializer
 
 logger = logging.getLogger(__name__)
@@ -90,3 +91,15 @@ class CurrentUser(APIView):
         request.user.delete()
         logger.info("User '%s' has been deleted" % name)
         return Response(status=status.HTTP_200_OK)
+
+
+class UserGenericViewSet(viewsets.GenericViewSet):
+    permission_classes = (IsAdminUser,)
+
+    @classmethod
+    def retrieve(cls, request, user_id):
+        if User.objects.filter(id=user_id).exists():
+            user = User.objects.get(id=user_id)
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_404_NOT_FOUND)
