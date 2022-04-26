@@ -71,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'lldeck.urls'
@@ -151,3 +152,58 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[%(levelname)s] %(asctime)s : %(message)s',
+        },
+        'simple': {
+            'format': '[%(levelname)s] %(message)s'
+        }
+    },
+    'handlers': {
+        'applications_file_handler': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'applications/activity.log',
+            'formatter': 'verbose',
+            'encoding': 'utf-8'
+        },
+        'contents_file_handler': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'contents/activity.log',
+            'formatter': 'verbose',
+            'encoding': 'utf-8'
+        },
+        'authentication_file_handler': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'authentication/activity.log',
+            'formatter': 'verbose',
+            'encoding': 'utf-8'
+        },
+        'console_handler': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        }
+    },
+    'loggers': {
+        'applications': {
+            'handlers': ['applications_file_handler', 'console_handler'],
+            'level': 'DEBUG',
+        },
+        'contents': {
+            'handlers': ['contents_file_handler', 'console_handler'],
+            'level': 'DEBUG',
+        },
+        'authentication': {
+            'handlers': ['authentication_file_handler', 'console_handler'],
+            'level': 'DEBUG',
+        },
+    },
+}
