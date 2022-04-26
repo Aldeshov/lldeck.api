@@ -1,8 +1,10 @@
 import logging
 
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash, authenticate, login, logout
+from django.contrib.auth.forms import PasswordChangeForm, AuthenticationForm
 from rest_framework import viewsets, status
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
+from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -28,10 +30,40 @@ class UserViewSet(viewsets.ViewSet):
 
 
 class CurrentUser(APIView):
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+
+    def check_permissions(self, request):
+        if request.method != 'POST' and not request.user.is_authenticated:
+            self.permission_denied(
+                request,
+                message=getattr(AllowAny, 'message', None),
+                code=getattr(AllowAny, 'code', None)
+            )
+
     @classmethod
     def get(cls, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+    @classmethod
+    def post(cls, request):
+        if request.data.get("logout") and request.user.is_authenticated:
+            logout(request)
+            logger.info("User '%s' logged out" % request.user.name)
+            return Response(status=status.HTTP_200_OK)
+
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                token, created = Token.objects.get_or_create(user=user)
+                logger.info("User '%s' logged in" % user.name)
+                return Response({"token": token.key}, status=status.HTTP_200_OK)
+            return Response({"message": "The given credentials are not valid"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @classmethod
     def put(cls, request):
