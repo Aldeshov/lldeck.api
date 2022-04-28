@@ -4,8 +4,9 @@ venv/
 
 media/
 
-static/
-!static/css/*
+static/admin/
+static/debug_toolbar/
+static/rest_framework/
 
 logs/
 *.log
