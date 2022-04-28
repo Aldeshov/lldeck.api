@@ -1,3 +1,7 @@
-#front_content-0, #back_content-0 {
+#front_content-0 h3, #back_content-0 h3 {
     display: none;
+}
+
+li.array-item {
+    margin-bottom: 5px;
 }

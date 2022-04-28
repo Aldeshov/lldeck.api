@@ -30,6 +30,8 @@ class Profile(models.Model):
 
     decks = typing.Any  # related_name
     deck_templates = typing.Any  # related_name
+    shared_deck_templates = typing.Any  # related_name
+    downloaded_deck_templates = typing.Any  # related_name
 
     # followed = models.ManyToManyField(to=PROFILE_MODEL, related_name='followers', blank=True)
 
@@ -38,12 +40,20 @@ class Profile(models.Model):
         verbose_name_plural = 'All Users Profiles'
 
     @property
+    def decks_count(self):
+        return len(self.decks.all())
+
+    @property
     def deck_templates_count(self):
         return len(self.deck_templates.all())
 
     @property
-    def decks_count(self):
-        return len(self.decks.all())
+    def downloaded_deck_templates_count(self):
+        return len(self.downloaded_deck_templates.all())
+
+    @property
+    def cards_learned_today(self):
+        return
 
     def __str__(self):
         return "%s's profile" % self.user.name

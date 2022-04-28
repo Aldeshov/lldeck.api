@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 
 from contents.forms import DeckTemplateCreationForm
 from contents.models import DeckTemplate, CardTemplate, Deck, Card, CardTemplateFrontContent, CardTemplateBackContent, \
@@ -13,6 +14,7 @@ class DeckTemplateAdmin(admin.ModelAdmin):
     """
     list_display = ('name', 'date_created', 'cards_count')
     search_fields = ('name',)
+    exclude = ('downloaded',)
     filter_horizontal = ()
 
     def save_related(self, request, form, formsets, change):
@@ -21,7 +23,7 @@ class DeckTemplateAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return 'creator', 'date_created', 'cards_count'
+            return 'creator', 'date_created', 'date_updated', 'cards_count', 'downloads'
         return super(DeckTemplateAdmin, self).get_readonly_fields(request, obj)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
@@ -58,7 +60,7 @@ class CardTemplateBackContentInline(admin.StackedInline):
         return False
 
 
-class CardTemplateAdmin(admin.ModelAdmin):
+class CardTemplateAdmin(admin.ModelAdmin, DynamicArrayMixin):
     """
     Custom card template admin page
     Allows full card edit (+ front and back)
@@ -68,9 +70,9 @@ class CardTemplateAdmin(admin.ModelAdmin):
     ordering = ('deck',)
     filter_horizontal = ()
 
-    class Media:
+    class Media(DynamicArrayMixin.Media):
         css = {
-            'all': ('css/custom_admin.css',)  # Include extra css
+            'all': DynamicArrayMixin.Media.css.get('all') + ('css/custom_admin.css',)
         }
 
     def get_readonly_fields(self, request, obj=None):
@@ -88,9 +90,14 @@ class DeckAdmin(admin.ModelAdmin):
     list_display = ('name', 'profile', 'favorite', 'cards_count')
     filter_horizontal = ()
 
+    def get_fields(self, request, obj=None):
+        if not obj:
+            return 'name', 'tags', 'template', 'profile'
+        return super(DeckAdmin, self).get_fields(request, obj)
+
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return 'template', 'profile', 'cards_count'
+            return 'template', 'profile', 'cards_count', 'date_created', 'date_updated'
         return super(DeckAdmin, self).get_readonly_fields(request, obj)
 
 
@@ -124,7 +131,7 @@ class CardBackContentInline(admin.StackedInline):
         return False
 
 
-class CardAdmin(admin.ModelAdmin):
+class CardAdmin(admin.ModelAdmin, DynamicArrayMixin):
     """
     Custom user's (profile's) deck's card admin page
     Allows full card edit (+ front and back)
@@ -135,9 +142,9 @@ class CardAdmin(admin.ModelAdmin):
     ordering = ('deck__profile',)
     filter_horizontal = ()
 
-    class Media:
+    class Media(DynamicArrayMixin.Media):
         css = {
-            'all': ('css/custom_admin.css',)  # Include extra css
+            'all': DynamicArrayMixin.Media.css.get('all') + ('css/custom_admin.css',)
         }
 
     def profile(self, obj: Card):

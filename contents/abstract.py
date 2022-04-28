@@ -1,8 +1,8 @@
 import typing
 
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django_better_admin_arrayfield.models.fields import ArrayField
 
 from contents.tools import get_card_content_path
 from lldeck.settings import DECK_TAG_MODEL
@@ -19,6 +19,7 @@ class DeckMixin(models.Model):
         help_text="Deck TAGs, used to sort by special tags."
     )
     date_created = models.DateTimeField(_('Date created'), auto_now_add=True)
+    date_updated = models.DateTimeField(_('Last updated'), auto_now=True)
 
     cards = typing.Any  # related_name
 
@@ -30,12 +31,12 @@ class DeckMixin(models.Model):
         if self.date_created:
             return self.date_created.date()
 
-    def __str__(self):
-        return "%s (from %s)" % (self.name, self.short_date_created)
-
     @property
     def cards_count(self):
         return len(self.cards.all())
+
+    def __str__(self):
+        return "%s (from %s)" % (self.name, self.short_date_created)
 
 
 class CardMixin(models.Model):
@@ -51,6 +52,10 @@ class CardMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.deck.save()
+        return super(CardMixin, self).save(force_insert, force_update, using, update_fields)
 
     def __str__(self):
         return "%s from deck '%s'" % (self.name, self.deck.name)
@@ -70,6 +75,10 @@ class CardFrontContentMixin(models.Model):
     class Meta:
         abstract = True
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.card.save()
+        return super(CardFrontContentMixin, self).save(force_insert, force_update, using, update_fields)
+
     def __str__(self):
         return "Front of card '%s'" % self.card.name
 
@@ -86,6 +95,10 @@ class CardBackContentMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.card.save()
+        return super(CardBackContentMixin, self).save(force_insert, force_update, using, update_fields)
 
     def __str__(self):
         return "Back of card '%s'" % self.card.name

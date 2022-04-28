@@ -77,8 +77,13 @@ class DeckTemplate(DeckMixin):
     creator = models.ForeignKey(to=PROFILE_MODEL, on_delete=models.CASCADE, related_name="deck_templates")
     shared = models.ManyToManyField(to=PROFILE_MODEL, related_name="shared_deck_templates", blank=True)
     public = models.BooleanField(default=False, help_text="Designates whether this deck template is public.")
+    downloaded = models.ManyToManyField(to=PROFILE_MODEL, related_name="downloaded_deck_templates")
 
     objects = DeckTemplateManager()
+
+    @property
+    def downloads(self):
+        return len(self.downloaded.all())
 
 
 class CardTemplate(CardMixin):
@@ -116,7 +121,7 @@ class CardTemplateBackContent(CardBackContentMixin):
 
 class Deck(DeckMixin):
     template = models.ForeignKey(
-        DeckTemplate, on_delete=models.CASCADE,
+        DeckTemplate, on_delete=models.SET_NULL,
         help_text="To import from existing templates",
         null=True, blank=True
     )
@@ -130,9 +135,8 @@ class Deck(DeckMixin):
         super(Deck, self).save(force_insert, force_update, using, update_fields)
 
         if use_template:
-            # for tag in self.template.tags.all():
-            #     self.tags.add(tag)
-            # self.save()
+            for tag in self.template.tags.all():
+                self.tags.add(tag)
 
             for card_template in self.template.cards.all() or []:
                 card = Card.objects.create(name=card_template.name, deck=self, template=card_template)
@@ -152,6 +156,7 @@ class Deck(DeckMixin):
                         audio=card_template.back_content.audio,
                         card=card
                     )
+                    self.template.downloaded.add(self.profile)
                 except CardTemplate.front_content.RelatedObjectDoesNotExist as error:
                     logger.error(error)
                 except CardTemplate.back_content.RelatedObjectDoesNotExist as error:
@@ -159,7 +164,7 @@ class Deck(DeckMixin):
 
 
 class Card(CardMixin):
-    template = models.ForeignKey(CardTemplate, on_delete=models.CASCADE, null=True, blank=True)
+    template = models.ForeignKey(CardTemplate, on_delete=models.SET_NULL, null=True, blank=True)
     deck = models.ForeignKey(Deck, on_delete=models.CASCADE, related_name="cards")
     state = models.SmallIntegerField(choices=CardState.CARD_STATES, default=CardState.STATE_IDLE)
     counts = ArrayField(
@@ -175,10 +180,10 @@ class Card(CardMixin):
 
 
 class CardFrontContent(CardFrontContentMixin):
-    template = models.ForeignKey(CardTemplateFrontContent, on_delete=models.CASCADE, null=True, blank=True)
+    template = models.ForeignKey(CardTemplateFrontContent, on_delete=models.SET_NULL, null=True, blank=True)
     card = models.OneToOneField(Card, related_name="front_content", on_delete=models.CASCADE)
 
 
 class CardBackContent(CardBackContentMixin):
-    template = models.ForeignKey(CardTemplateBackContent, on_delete=models.CASCADE, null=True, blank=True)
+    template = models.ForeignKey(CardTemplateBackContent, on_delete=models.SET_NULL, null=True, blank=True)
     card = models.OneToOneField(Card, related_name="back_content", on_delete=models.CASCADE)

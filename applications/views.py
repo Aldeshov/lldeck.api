@@ -1,10 +1,14 @@
+import logging
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from applications.models import Profile
-from applications.serializers import ProfileSerializer
+from applications.serializers import ProfileSerializer, ProfileStatusSerializer
 from authentication.models import User
+
+logger = logging.getLogger(__name__)
 
 
 class CurrentUserProfileAPIView(APIView):
@@ -40,3 +44,15 @@ class ProfileAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist or Profile.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class CurrentUserProfileStatusAPIView(APIView):
+
+    @classmethod
+    def get(cls, request):
+        try:
+            serializer = ProfileStatusSerializer(request.user.profile)
+            logger.info("User '%s' requested profile statistics" % request.user.name)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Profile.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)

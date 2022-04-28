@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 def get_user_avatar_path(instance, filename):
     logger.info("Avatar (image file) '%s' was uploaded by the user '%s'" % (filename, instance.name))
-    return os.path.join("avatars", str(uuid.uuid1()))
+    return os.path.join("avatars", str(uuid.uuid1()) + os.path.splitext(filename)[1])
 
 
 def delete_file(file):

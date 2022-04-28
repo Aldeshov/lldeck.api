@@ -1,6 +1,7 @@
 asgiref==3.5.0
 backports.zoneinfo==0.2.1
 Django==4.0.4
+django-better-admin-arrayfield==1.4.2
 django-cors-headers==3.11.0
 django-debug-toolbar==3.2.4
 django-filter==21.1
