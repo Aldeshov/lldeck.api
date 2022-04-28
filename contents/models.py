@@ -2,6 +2,8 @@ import logging
 import typing
 
 from django.contrib.postgres.fields import ArrayField
+from django.core.files.base import ContentFile
+from django.core.files.images import ImageFile
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -54,14 +56,24 @@ class DeckTemplateManager(models.Manager):
                 CardTemplateFrontContent.objects.create(
                     word=card.front_content.word,
                     helper_text=card.helper_text,
-                    photo=card.front_content.photo,
-                    audio=card.front_content.audio,
+                    photo=ImageFile(
+                        ContentFile(
+                            card.front_content.photo.read(),
+                            card.front_content.photo.name)
+                    ) if card.front_content.photo else card.front_content.photo,
+                    audio=ContentFile(
+                        card.front_content.audio.read(),
+                        card.front_content.audio.name
+                    ) if card.front_content.audio else card.front_content.audio,
                     card=card_template
                 )
                 CardTemplateBackContent.objects.create(
                     definition=card.back_content.definition,
                     examples=card.back_content.examples,
-                    audio=card.back_content.audio,
+                    audio=ContentFile(
+                        card.back_content.audio.read(),
+                        card.back_content.audio.name
+                    ) if card.back_content.audio else card.back_content.audio,
                     card=card_template
                 )
             except Card.front_content.RelatedObjectDoesNotExist or Card.back_content.RelatedObjectDoesNotExist as error:
@@ -145,15 +157,26 @@ class Deck(DeckMixin):
                         template=card_template.front_content,
                         word=card_template.front_content.word,
                         helper_text=card_template.front_content.helper_text,
-                        photo=card_template.front_content.photo,
-                        audio=card_template.front_content.audio,
+                        photo=ImageFile(
+                            ContentFile(
+                                card_template.front_content.photo.read(),
+                                card_template.front_content.photo.name
+                            )
+                        ) if card_template.front_content.photo else card_template.front_content.photo,
+                        audio=ContentFile(
+                            card_template.front_content.audio.read(),
+                            card_template.front_content.audio.name
+                        ) if card_template.front_content.audio else card_template.front_content.audio,
                         card=card
                     )
                     CardBackContent.objects.create(
                         template=card_template.back_content,
                         definition=card_template.back_content.definition,
                         examples=card_template.back_content.examples,
-                        audio=card_template.back_content.audio,
+                        audio=ContentFile(
+                            card_template.back_content.audio.read(),
+                            card_template.back_content.audio.name
+                        ) if card_template.back_content.audio else card_template.back_content.audio,
                         card=card
                     )
                     self.template.downloaded.add(self.profile)
