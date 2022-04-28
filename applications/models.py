@@ -8,7 +8,11 @@ from lldeck.settings import AUTH_USER_MODEL
 
 
 class Profile(models.Model):
-    is_private = models.BooleanField(_('Is private'), default=True)
+    is_private = models.BooleanField(
+        _('Is private'),
+        default=True,
+        help_text=_("Designates whether this user profile is private. Private profiles invisible to others")
+    )
     user = models.OneToOneField(to=AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     aim = models.IntegerField(_('Aim'), default=100, help_text="Count of card to learn every day")
     about = models.CharField(_('About'), max_length=256, blank=True, default="Hey there! I am learning on ll-deck!")

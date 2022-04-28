@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from contents.forms import DeckTemplateCreationForm
 from contents.models import DeckTemplate, CardTemplate, Deck, Card, CardTemplateFrontContent, CardTemplateBackContent, \
-    CardFrontContent, CardBackContent
+    CardFrontContent, CardBackContent, DeckTag
 
 
 class DeckTemplateAdmin(admin.ModelAdmin):
@@ -161,3 +161,4 @@ admin.site.register(DeckTemplate, DeckTemplateAdmin)
 admin.site.register(CardTemplate, CardTemplateAdmin)
 admin.site.register(Deck, DeckAdmin)
 admin.site.register(Card, CardAdmin)
+admin.site.register(DeckTag)

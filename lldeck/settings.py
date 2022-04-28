@@ -41,6 +41,8 @@ AUTH_USER_MODEL = 'authentication.User'
 
 PROFILE_MODEL = 'applications.Profile'
 
+DECK_TAG_MODEL = 'contents.DeckTag'
+
 # Application definition
 
 INSTALLED_APPS = [

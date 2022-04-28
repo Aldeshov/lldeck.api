@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from contents.tools import get_card_content_path
+from lldeck.settings import DECK_TAG_MODEL
 
 
 class DeckMixin(models.Model):
@@ -12,6 +13,11 @@ class DeckMixin(models.Model):
     Abstract Base class of Deck model
     """
     name = models.CharField(_('Name'), max_length=128, default="<Unnamed deck>")
+    tags = models.ManyToManyField(
+        to=DECK_TAG_MODEL,
+        related_name="%(class)s_list",
+        help_text="Deck TAGs, used to sort by special tags."
+    )
     date_created = models.DateTimeField(_('Date created'), auto_now_add=True)
 
     cards = typing.Any  # related_name
@@ -21,7 +27,8 @@ class DeckMixin(models.Model):
 
     @property
     def short_date_created(self):
-        return self.date_created.date()
+        if self.date_created:
+            return self.date_created.date()
 
     def __str__(self):
         return "%s (from %s)" % (self.name, self.short_date_created)

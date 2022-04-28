@@ -1,13 +1,43 @@
 import logging
+import typing
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from contents.abstract import DeckMixin, CardMixin, CardBackContentMixin, CardFrontContentMixin
 from contents.constants import CardState, default_counts, default_last_dates
+from contents.validators import validate_tag_name
 from lldeck.settings import PROFILE_MODEL
 
 logger = logging.getLogger(__name__)
+
+
+class TagField(models.CharField):
+    default_validators = [validate_tag_name]
+
+    def __init__(self, *args, **kwargs):
+        super(TagField, self).__init__(*args, **kwargs)
+
+    def get_prep_value(self, value):
+        return str(value).lower()
+
+
+class DeckTag(models.Model):
+    """
+    Base class model for Deck TAGs
+    """
+    name = TagField(_("name"), max_length=16, unique=True)
+
+    deck_list = typing.Any  # related_name
+    decktemplate_list = typing.Any  # related_name
+
+    class Meta:
+        verbose_name = _("Deck #TAG")
+        verbose_name_plural = _("Deck TAGs")
+
+    def __str__(self):
+        return "[TAG] %s" % self.name
 
 
 class DeckTemplateManager(models.Manager):
@@ -17,7 +47,7 @@ class DeckTemplateManager(models.Manager):
     """
 
     def create_from_deck(self, deck):
-        deck_template = self.create(name=deck.name, creator=deck.profile)
+        deck_template = self.create(name=deck.name, creator=deck.profile, tags=deck.tags)
         for card in deck.cards.all() or []:
             card_template = CardTemplate.objects.create(name=card.name, deck=deck_template)
             try:
@@ -45,6 +75,8 @@ class DeckTemplate(DeckMixin):
     Owner of this deck (creator) required field
     """
     creator = models.ForeignKey(to=PROFILE_MODEL, on_delete=models.CASCADE, related_name="deck_templates")
+    shared = models.ManyToManyField(to=PROFILE_MODEL, related_name="shared_deck_templates", blank=True)
+    public = models.BooleanField(default=False, help_text="Designates whether this deck template is public.")
 
     objects = DeckTemplateManager()
 
@@ -91,10 +123,17 @@ class Deck(DeckMixin):
     favorite = models.BooleanField(default=False)
     profile = models.ForeignKey(to=PROFILE_MODEL, on_delete=models.CASCADE, related_name="decks")
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, use_template=False):
+        if self.template and not self.pk:
+            use_template = True
+
         super(Deck, self).save(force_insert, force_update, using, update_fields)
 
-        if self.template:
+        if use_template:
+            # for tag in self.template.tags.all():
+            #     self.tags.add(tag)
+            # self.save()
+
             for card_template in self.template.cards.all() or []:
                 card = Card.objects.create(name=card_template.name, deck=self, template=card_template)
                 try:

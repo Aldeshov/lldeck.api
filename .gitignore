@@ -5,7 +5,7 @@ venv/
 media/
 
 static/
-!static/css/
+!static/css/*
 
 logs/
 *.log
