@@ -18,8 +18,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone_number = PhoneNumberField(_('Phone number'), blank=True, null=True, unique=True)
     date_joined = models.DateTimeField(_('Date joined'), auto_now_add=True)
     avatar = models.ImageField(_('Avatar'), upload_to=get_user_avatar_path, blank=True, null=True)
-    is_active = models.BooleanField(_('Active'), default=True)
-    is_staff = models.BooleanField(_('Is staff'), default=False)
+    is_staff = models.BooleanField(
+        _("Staff status"),
+        default=False,
+        help_text=_("Designates whether the user can log into this admin site."),
+    )
+    is_active = models.BooleanField(
+        _("Active"),
+        default=True,
+        help_text=_(
+            "Designates whether this user should be treated as active. "
+            "Unselect this instead of deleting accounts."
+        ),
+    )
 
     objects = UserManager()
 

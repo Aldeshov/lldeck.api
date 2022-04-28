@@ -4,8 +4,8 @@ from applications.models import Profile
 
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ("__str__",)
-    readonly_fields = ('user',)
+    list_display = ("__str__", "aim")
+    readonly_fields = ('user', 'deck_templates_count', 'decks_count')
 
     filter_horizontal = ()
 

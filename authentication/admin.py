@@ -8,7 +8,7 @@ from authentication.models import User
 class Admin(UserAdmin):
     # The forms to add and change user instances
     ordering = ("name",)
-    list_display = ("name", "email")
+    list_display = ("name", "email", "phone_number", "is_staff")
     add_form = UserCreationForm
     readonly_fields = ('date_joined', 'profile')
     _fields = ('name', 'email', 'password', 'phone_number', 'date_joined', 'avatar', 'profile', 'is_staff', 'is_active')

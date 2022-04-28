@@ -1,3 +1,5 @@
+import typing
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -8,7 +10,7 @@ from lldeck.settings import AUTH_USER_MODEL
 class Profile(models.Model):
     is_private = models.BooleanField(_('Is private'), default=True)
     user = models.OneToOneField(to=AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
-    aim = models.CharField(_('Aim'), max_length=128, blank=True)
+    aim = models.IntegerField(_('Aim'), default=100, help_text="Count of card to learn every day")
     about = models.CharField(_('About'), max_length=256, blank=True, default="Hey there! I am learning on ll-deck!")
     status = models.SmallIntegerField(
         _('Status'),
@@ -22,11 +24,22 @@ class Profile(models.Model):
         default=UserLanguage.LANGUAGE_NONE
     )
 
-    # subscribed = models.ManyToManyField(User, related_name='channel_subscribers', blank=True)
+    decks = typing.Any  # related_name
+    deck_templates = typing.Any  # related_name
+
+    # followed = models.ManyToManyField(to=PROFILE_MODEL, related_name='followers', blank=True)
 
     class Meta:
         verbose_name = 'User Profile'
         verbose_name_plural = 'All Users Profiles'
+
+    @property
+    def deck_templates_count(self):
+        return len(self.deck_templates.all())
+
+    @property
+    def decks_count(self):
+        return len(self.decks.all())
 
     def __str__(self):
         return "%s's profile" % self.user.name

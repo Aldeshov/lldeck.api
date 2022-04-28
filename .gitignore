@@ -4,6 +4,9 @@ venv/
 
 media/
 
+static/
+!static/css/
+
 logs/
 *.log
 .env
