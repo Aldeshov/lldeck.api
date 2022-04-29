@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 
 from contents.tools import get_card_content_path
+from contents.validators import AudioFileMimeValidator
 from lldeck.settings import DECK_TAG_MODEL
 
 
@@ -69,7 +70,11 @@ class CardFrontContentMixin(models.Model):
     word = models.CharField(max_length=128)
     helper_text = models.CharField(max_length=128, null=True, blank=True)
     photo = models.ImageField(_('Image file'), upload_to=get_card_content_path, null=True, blank=True)
-    audio = models.FileField(_('Audio file'), upload_to=get_card_content_path, null=True, blank=True)
+    audio = models.FileField(
+        _('Audio file'), upload_to=get_card_content_path,
+        validators=[AudioFileMimeValidator()],
+        null=True, blank=True
+    )
     card = models.OneToOneField(CardMixin, related_name="front_content", on_delete=models.CASCADE)
 
     class Meta:
@@ -90,7 +95,10 @@ class CardBackContentMixin(models.Model):
     """
     definition = models.TextField(_('Definition'))
     examples = ArrayField(models.CharField(max_length=128), size=8, default=list, blank=True)
-    audio = models.FileField(_('Audio file'), upload_to=get_card_content_path, null=True, blank=True)
+    audio = models.FileField(
+        _('Audio file'), upload_to=get_card_content_path,
+        validators=[AudioFileMimeValidator()], null=True, blank=True
+    )
     card = models.OneToOneField(CardMixin, related_name="back_content", on_delete=models.CASCADE)
 
     class Meta:
