@@ -95,7 +95,7 @@ class DeckTemplate(DeckMixin):
 
     @property
     def downloads(self):
-        return len(self.downloaded.all())
+        return self.downloaded.all().count()
 
 
 class CardTemplate(CardMixin):

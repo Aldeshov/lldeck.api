@@ -18,7 +18,16 @@ def validate_tag_name(value: str):
 
 @deconstructible
 class AudioFileMimeValidator:
+    """
+    File Validator class for audio files
+    Allowed audio extensions and mime-types are: mp3 / wav / ogg
+
+    For more info visit the link below
+    https://madil.in/file-mime-type-validation-in-django/
+    """
     messages = {
+        "file_too_small": "File too small. Minimum file size is %(min_size)s",
+        "file_too_large": "File too large. Maximum file size is %(max_size)s",
         "malicious_file": "Upload a valid audio. Allowed extensions are: '%(allowed_extensions)s'.",
         "not_supported": "File extension '%(extension)s' is not allowed. "
                          "Allowed extensions are: '%(allowed_extensions)s'."
@@ -31,11 +40,32 @@ class AudioFileMimeValidator:
         'ogg': 'audio/ogg'
     }
 
+    min_file_size = 8 * 1024  # 8KB
+    max_file_size = 16 * 1024 * 1024  # 16MB
+    code_size = 'invalid_size'
+
     def __init__(self, ):
         self.allowed_extensions = [allowed_extension.lower() for
                                    allowed_extension in self.ext_cnt_mapping.keys()]
 
     def __call__(self, data):
+        if not self.min_file_size <= data.size:
+            raise ValidationError(
+                self.messages['file_too_small'],
+                code=self.code_size,
+                params={
+                    'min_size': str(self.min_file_size / 1024) + " KB"
+                }
+            )
+        if not self.max_file_size >= data.size:
+            raise ValidationError(
+                self.messages['file_too_large'],
+                code=self.code_size,
+                params={
+                    'max_size': str(self.max_file_size / (1024 * 1024)) + " MB"
+                }
+            )
+
         extension = Path(data.name).suffix[1:].lower()
         content_type = magic.from_buffer(data.read(1024), mime=True)
         if extension not in self.allowed_extensions:

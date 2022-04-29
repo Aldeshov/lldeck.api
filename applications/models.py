@@ -41,15 +41,15 @@ class Profile(models.Model):
 
     @property
     def decks_count(self):
-        return len(self.decks.all())
+        return self.decks.all().count()
 
     @property
     def deck_templates_count(self):
-        return len(self.deck_templates.all())
+        return self.deck_templates.all().count()
 
     @property
     def downloaded_deck_templates_count(self):
-        return len(self.downloaded_deck_templates.all())
+        return self.downloaded_deck_templates.all().count()
 
     @property
     def cards_learned_today(self):

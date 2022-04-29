@@ -34,7 +34,7 @@ class DeckMixin(models.Model):
 
     @property
     def cards_count(self):
-        return len(self.cards.all())
+        return self.cards.all().count()
 
     def __str__(self):
         return "%s (from %s)" % (self.name, self.short_date_created)
