@@ -90,6 +90,13 @@ class DeckAdmin(admin.ModelAdmin):
     list_display = ('name', 'profile', 'favorite', 'cards_count')
     filter_horizontal = ()
 
+    def save_related(self, request, form, formsets, change):
+        if change or not form.fields.get('template'):
+            return super(DeckAdmin, self).save_related(request, form, formsets, change)
+
+        for formset in formsets:
+            self.save_formset(request, form, formset, change=change)
+
     def get_fields(self, request, obj=None):
         if not obj:
             return 'name', 'tags', 'template', 'profile'

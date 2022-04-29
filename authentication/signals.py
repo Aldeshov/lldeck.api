@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models.signals import post_delete, pre_save, post_save
 from django.dispatch import receiver
 
@@ -20,7 +22,9 @@ def user_deleted(sender: User, **kwargs):
 
 @receiver(pre_save, sender=User)
 def user_changed(sender: User, **kwargs):
-    if sender.objects.filter(id=kwargs.get("instance").id).exists():
-        old_avatar = sender.objects.get(id=kwargs.get("instance").id).avatar
-        if old_avatar and old_avatar != kwargs.get("instance").avatar:
-            delete_file(old_avatar)
+    try:
+        previous = sender.objects.get(id=kwargs.get("instance").id)
+        if previous.avatar != kwargs.get("instance").avatar:
+            delete_file(previous.avatar)
+    except sender.DoesNotExist as error:
+        logging.debug(error)

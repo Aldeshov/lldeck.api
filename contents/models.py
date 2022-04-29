@@ -147,9 +147,7 @@ class Deck(DeckMixin):
         super(Deck, self).save(force_insert, force_update, using, update_fields)
 
         if use_template:
-            for tag in self.template.tags.all():
-                self.tags.add(tag)
-
+            self.tags.set(self.template.tags.all())
             for card_template in self.template.cards.all() or []:
                 card = Card.objects.create(name=card_template.name, deck=self, template=card_template)
                 try:
