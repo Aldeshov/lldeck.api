@@ -17,7 +17,8 @@ class DeckMixin(models.Model):
     tags = models.ManyToManyField(
         to=DECK_TAG_MODEL,
         related_name="%(class)s_list",
-        help_text="Deck TAGs, used to sort by special tags."
+        help_text="Deck TAGs, used to sort by special tags.",
+        blank=True
     )
     date_created = models.DateTimeField(_('Date created'), auto_now_add=True)
     date_updated = models.DateTimeField(_('Last updated'), auto_now=True)

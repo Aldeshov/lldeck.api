@@ -14,7 +14,7 @@ class DeckTemplateAdmin(admin.ModelAdmin):
     """
     list_display = ('name', 'date_created', 'cards_count')
     search_fields = ('name',)
-    exclude = ('downloaded',)
+    exclude = ('downloaded', 'liked', 'disliked')
     filter_horizontal = ()
 
     def save_related(self, request, form, formsets, change):
@@ -23,7 +23,7 @@ class DeckTemplateAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return 'creator', 'date_created', 'date_updated', 'cards_count', 'downloads'
+            return 'creator', 'date_created', 'date_updated', 'cards_count', 'downloads', 'likes', 'dislikes'
         return super(DeckTemplateAdmin, self).get_readonly_fields(request, obj)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
@@ -99,7 +99,7 @@ class DeckAdmin(admin.ModelAdmin):
 
     def get_fields(self, request, obj=None):
         if not obj:
-            return 'name', 'tags', 'template', 'profile'
+            return 'name', 'template', 'profile'
         return super(DeckAdmin, self).get_fields(request, obj)
 
     def get_readonly_fields(self, request, obj=None):
@@ -144,9 +144,10 @@ class CardAdmin(admin.ModelAdmin, DynamicArrayMixin):
     Allows full card edit (+ front and back)
     Shows some extra information
     """
-    inlines = (CardFrontContentInline, CardBackContentInline)
+    inlines = [CardFrontContentInline, CardBackContentInline, ]
     list_display = ('name', 'deck', 'profile', 'state')
     ordering = ('deck__profile',)
+    stats = ['succeeded_counts', 'succeeded_last_date', 'failed_counts', 'failed_last_date']
     filter_horizontal = ()
 
     class Media(DynamicArrayMixin.Media):
@@ -167,7 +168,7 @@ class CardAdmin(admin.ModelAdmin, DynamicArrayMixin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return 'template', 'deck', 'state', 'counts', 'last_dates', 'profile'
+            return ['template', 'deck', 'state', 'profile'] + self.stats
         return super(CardAdmin, self).get_readonly_fields(request, obj)
 
 

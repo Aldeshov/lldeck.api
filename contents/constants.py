@@ -15,11 +15,3 @@ class CardState:
         (STATE_AGAIN, "Card state: Again"),
         (STATE_GOOD, "Card state: Good")
     )
-
-
-def default_counts():
-    return list((0,) * 3)
-
-
-def default_last_dates():
-    return list((None,) * 3)

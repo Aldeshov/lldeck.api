@@ -1,14 +1,16 @@
 import logging
 import typing
 
-from django.contrib.postgres.fields import ArrayField
 from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
+from django.core.validators import MinLengthValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from contents.abstract import DeckMixin, CardMixin, CardBackContentMixin, CardFrontContentMixin
-from contents.constants import CardState, default_counts, default_last_dates
+from contents.constants import CardState
+from contents.tools import random_string
 from contents.validators import validate_tag_name
 from lldeck.settings import PROFILE_MODEL
 
@@ -88,14 +90,35 @@ class DeckTemplate(DeckMixin):
     """
     creator = models.ForeignKey(to=PROFILE_MODEL, on_delete=models.CASCADE, related_name="deck_templates")
     shared = models.ManyToManyField(to=PROFILE_MODEL, related_name="shared_deck_templates", blank=True)
+    shared_link_key = models.CharField(
+        _('Shared key'), max_length=32, validators=[MinLengthValidator(32)], null=True, unique=True
+    )
     public = models.BooleanField(default=False, help_text="Designates whether this deck template is public.")
+
+    liked = models.ManyToManyField(to=PROFILE_MODEL, related_name="liked_deck_templates")
+    disliked = models.ManyToManyField(to=PROFILE_MODEL, related_name="disliked_deck_templates")
     downloaded = models.ManyToManyField(to=PROFILE_MODEL, related_name="downloaded_deck_templates")
 
     objects = DeckTemplateManager()
 
+    def generate_shared_link_key(self):
+        key = random_string()
+        while DeckTemplate.objects.filter(shared_link_key=key).exists():
+            key = random_string()
+        self.shared_link_key = key
+        self.save()
+
     @property
     def downloads(self):
         return self.downloaded.all().count()
+
+    @property
+    def likes(self):
+        return self.liked.all().count()
+
+    @property
+    def dislikes(self):
+        return self.disliked.all().count()
 
 
 class CardTemplate(CardMixin):
@@ -148,8 +171,9 @@ class Deck(DeckMixin):
 
         if use_template:
             self.tags.set(self.template.tags.all())
+            self.template.downloaded.add(self.profile)
             for card_template in self.template.cards.all() or []:
-                card = Card.objects.create(name=card_template.name, deck=self, template=card_template)
+                card = Card.objects.create(name=card_template.name, template=card_template, deck=self)
                 try:
                     CardFrontContent.objects.create(
                         template=card_template.front_content,
@@ -177,7 +201,6 @@ class Deck(DeckMixin):
                         ) if card_template.back_content.audio else card_template.back_content.audio,
                         card=card
                     )
-                    self.template.downloaded.add(self.profile)
                 except CardTemplate.front_content.RelatedObjectDoesNotExist as error:
                     logger.error(error)
                 except CardTemplate.back_content.RelatedObjectDoesNotExist as error:
@@ -188,16 +211,27 @@ class Card(CardMixin):
     template = models.ForeignKey(CardTemplate, on_delete=models.SET_NULL, null=True, blank=True)
     deck = models.ForeignKey(Deck, on_delete=models.CASCADE, related_name="cards")
     state = models.SmallIntegerField(choices=CardState.CARD_STATES, default=CardState.STATE_IDLE)
-    counts = ArrayField(
-        models.IntegerField(default=0), size=3,
-        help_text="Viewed, Success, Failed",
-        default=default_counts
-    )
-    last_dates = ArrayField(
-        models.DateTimeField(null=True, blank=True), size=3,
-        help_text="Viewed, Success, Failed",
-        default=default_last_dates
-    )
+
+    succeeded_date = models.DateTimeField(null=True, blank=True)
+
+    def perform_action_view(self):
+        if self.state == CardState.STATE_IDLE:
+            self.state = CardState.STATE_VIEWED
+            self.save()
+
+    def perform_action_success(self):
+        not_today = not self.succeeded_date or self.succeeded_date.date() != timezone.now().date()
+        if not_today and self.state == CardState.STATE_GOOD:
+            self.succeeded_date = timezone.now()
+            self.save()
+        elif self.state != CardState.STATE_GOOD:
+            self.state = CardState.STATE_GOOD
+            self.save()
+
+    def perform_action_fail(self):
+        if self.state != CardState.STATE_AGAIN:
+            self.state = CardState.STATE_AGAIN
+            self.save()
 
 
 class CardFrontContent(CardFrontContentMixin):
