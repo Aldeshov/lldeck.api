@@ -30,6 +30,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS").split(',')
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost"
+]
+
 # For requests from browsers (cors)
 # For more info https://pypi.org/project/django-cors-headers/
 

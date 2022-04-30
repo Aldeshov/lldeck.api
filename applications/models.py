@@ -51,5 +51,12 @@ class Profile(models.Model):
     def downloaded_deck_templates_count(self):
         return self.downloaded_deck_templates.all().count()
 
+    @property
+    def cards_learned_today(self):
+        count = 0
+        for deck in self.decks.all():
+            count += deck.learned_today_count
+        return count
+
     def __str__(self):
         return "%s's profile" % self.user.name

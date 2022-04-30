@@ -80,7 +80,7 @@ class Command(BaseCommand):
                             'db_password'],
                     )
                     if successful:
-                        self.stdout.write(self.style.SUCCESS('Settings has been written successfully!'))
+                        self.stdout.write(self.style.SUCCESS('Settings have been written successfully!'))
                     else:
                         self.stdout.write(self.style.ERROR('There was an error while writing settings.'))
 
@@ -128,7 +128,7 @@ class Command(BaseCommand):
                     database_password=database_password,
                 )
                 if successful:
-                    self.stdout.write(self.style.SUCCESS('Settings has been written successfully!'))
+                    self.stdout.write(self.style.SUCCESS('Settings have been written successfully!'))
                 else:
                     self.stdout.write(self.style.ERROR('There was an error while writing settings.'))
 

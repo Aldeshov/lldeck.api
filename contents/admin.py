@@ -104,7 +104,7 @@ class DeckAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return 'template', 'profile', 'cards_count', 'date_created', 'date_updated'
+            return 'template', 'profile', 'cards_count', 'learned_today_count', 'date_created', 'date_updated'
         return super(DeckAdmin, self).get_readonly_fields(request, obj)
 
 
@@ -147,7 +147,6 @@ class CardAdmin(admin.ModelAdmin, DynamicArrayMixin):
     inlines = [CardFrontContentInline, CardBackContentInline, ]
     list_display = ('name', 'deck', 'profile', 'state')
     ordering = ('deck__profile',)
-    stats = ['succeeded_counts', 'succeeded_last_date', 'failed_counts', 'failed_last_date']
     filter_horizontal = ()
 
     class Media(DynamicArrayMixin.Media):
@@ -168,7 +167,7 @@ class CardAdmin(admin.ModelAdmin, DynamicArrayMixin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ['template', 'deck', 'state', 'profile'] + self.stats
+            return 'template', 'deck', 'state', 'opened_date', 'next_date', 'profile', 'k'
         return super(CardAdmin, self).get_readonly_fields(request, obj)
 
 
