@@ -34,10 +34,9 @@ class AudioFileMimeValidator:
     }
     code = 'invalid_extension'
     ext_cnt_mapping = {
-        'mp3': 'audio/mpeg',
-        'wav': 'audio/wav',
-        'x-wav': 'audio/x-wav',
-        'ogg': 'audio/ogg'
+        'mp3': ['audio/mpeg'],
+        'wav': ['audio/wav', 'audio/x-wav'],
+        'ogg': ['audio/ogg']
     }
 
     min_file_size = 8 * 1024  # 8KB
@@ -77,7 +76,7 @@ class AudioFileMimeValidator:
                     'allowed_extensions': ', '.join(self.allowed_extensions)
                 }
             )
-        if content_type != self.ext_cnt_mapping[extension]:
+        if content_type not in self.ext_cnt_mapping[extension]:
             raise ValidationError(
                 self.messages['malicious_file'],
                 code=self.code,
