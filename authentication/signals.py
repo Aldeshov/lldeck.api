@@ -24,7 +24,7 @@ def user_deleted(sender: User, **kwargs):
 def user_changed(sender: User, **kwargs):
     try:
         previous = sender.objects.get(id=kwargs.get("instance").id)
-        if previous.avatar != kwargs.get("instance").avatar:
+        if previous.avatar and previous.avatar != kwargs.get("instance").avatar:
             delete_file(previous.avatar)
     except sender.DoesNotExist as error:
         logging.debug(error)

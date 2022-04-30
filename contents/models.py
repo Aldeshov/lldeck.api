@@ -6,7 +6,7 @@ from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
 from django.core.validators import MinLengthValidator, MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models import Case, When, Q
+from django.db.models import Case, When
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -194,17 +194,24 @@ class Deck(DeckMixin):
     @property
     def learning_today_count(self):
         return self.cards.filter(
-            ~Q(opened_date__date=timezone.now().date()),
+            opened_date__date=timezone.now().date(),
             statistics__date=None, state=CardState.STATE_GOOD
         ).count()
+
+    @property
+    def failed_count(self):
+        return self.get_failed_cards().count()
 
     def get_today_statistics(self):
         if self.statistics.last() and self.statistics.last().date == timezone.now().date():
             return self.statistics.last()
 
+    def get_failed_cards(self):
+        return self.cards.filter(state=CardState.STATE_AGAIN)
+
     def get_daily_new_cards(self):
         # Configuration to get daily new cards up to max count
-        max_count = self.profile.aim - (self.learned_today_count + self.learning_today_count + self.failed_today_count)
+        max_count = self.profile.aim - (self.learned_today_count + self.learning_today_count + self.failed_count)
         priority_list = [CardState.STATE_VIEWED, CardState.STATE_IDLE]
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(priority_list)])
 
@@ -221,7 +228,7 @@ class Deck(DeckMixin):
         # https://stackoverflow.com/questions/431628/how-can-i-combine-two-or-more-querysets-in-a-django-view
         return list(
             chain(
-                self.cards.filter(state=CardState.STATE_AGAIN),
+                self.get_failed_cards(),
                 self.cards.filter(statistics__date=None, state=CardState.STATE_GOOD)
             )
         )
@@ -230,19 +237,17 @@ class Deck(DeckMixin):
         return self.cards.filter(state=CardState.STATE_GOOD, next_date__lte=timezone.now().date())
 
     def trigger_fail_statistics(self, card):
-        seconds = timezone.now() - card.opened_date.timestamp() if card and card.opened_date else 0
-        self.update_statistics(card, seconds)
+        self.update_statistics(card).cards_failed.add(card)
 
-    def trigger_success_statistics(self, card_statistics):
-        seconds = card_statistics.date_time.timestamp() - card_statistics.card.opened_date.timestamp() \
-            if card_statistics and card_statistics.card.opened_date else 0
-        self.update_statistics(card_statistics.card, seconds)
+    def trigger_success_statistics(self, card):
+        self.update_statistics(card).cards_learned.add(card)
 
-    def update_statistics(self, card, seconds):
+    def update_statistics(self, card):
+        seconds = timezone.now().timestamp() - card.opened_date.timestamp() if card and card.opened_date else 0
         stat, created = DeckDailyStatistics.objects.get_or_create(deck=self, date=timezone.now().date())
-        stat.cards_learned.add(card)
         stat.seconds_gone += seconds
         stat.save()
+        return stat
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None, use_template=False):
         if self.template and not self.pk:
@@ -351,13 +356,13 @@ class Card(CardMixin):
         self.save()
 
     def perform_action_view(self):
-        if self.state == CardState.STATE_IDLE:
+        if self.state == CardState.STATE_IDLE and self.opened_date:
             self.state = CardState.STATE_VIEWED
             self.save()
             return True
 
     def perform_action_success(self):
-        if self.state == CardState.STATE_GOOD:
+        if not self.is_succeeded_today and self.state == CardState.STATE_GOOD:
             CardSucceededStatistics.objects.get_or_create(card=self, date=timezone.now().date())
             return True
         elif self.state != CardState.STATE_IDLE:
@@ -366,7 +371,7 @@ class Card(CardMixin):
             return True
 
     def perform_action_fail(self):
-        if self.state != CardState.STATE_IDLE:
+        if not self.is_succeeded_today and self.state != CardState.STATE_IDLE:
             self.deck.trigger_fail_statistics(self)
             self.state = CardState.STATE_AGAIN
             self.k_increase(decrease=True, commit=False)
@@ -387,7 +392,7 @@ class CardSucceededStatistics(models.Model):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.pk:
             self.card.next_date = self.date + timezone.timedelta(days=int(self.card.k ** self.card.success_count))
-            self.card.deck.trigger_success_statistics(self)
+            self.card.deck.trigger_success_statistics(self.card)
             self.card.k_increase()
         super(CardSucceededStatistics, self).save(force_insert, force_update, using, update_fields)
 
