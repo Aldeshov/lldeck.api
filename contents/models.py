@@ -111,8 +111,9 @@ class DeckTemplate(DeckMixin):
         self.save()
 
     def remove_generated_shared_link(self):
-        self.shared_link_key = None
-        self.save()
+        if self.shared_link_key:
+            self.shared_link_key = None
+            self.save()
 
     def like_content(self, profile, dislike=False, retract=False):
         if retract:
@@ -217,6 +218,7 @@ class Deck(DeckMixin):
         return cards
 
     def get_learning_cards(self):
+        # https://stackoverflow.com/questions/431628/how-can-i-combine-two-or-more-querysets-in-a-django-view
         return list(
             chain(
                 self.cards.filter(state=CardState.STATE_AGAIN),

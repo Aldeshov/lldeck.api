@@ -37,7 +37,7 @@ class Profile(models.Model):
 
     class Meta:
         verbose_name = 'User Profile'
-        verbose_name_plural = 'All Users Profiles'
+        verbose_name_plural = 'Users Profiles'
 
     @property
     def decks_count(self):

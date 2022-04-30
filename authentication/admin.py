@@ -4,7 +4,10 @@ from django.contrib.auth.admin import UserAdmin
 from authentication.forms import UserCreationForm
 from authentication.models import User
 
+admin.site.site_header = "LLDeck Django administration"
 
+
+@admin.register(User)
 class Admin(UserAdmin):
     # The forms to add and change user instances
     ordering = ("name",)
@@ -18,6 +21,3 @@ class Admin(UserAdmin):
     add_fieldsets = ((None, {'classes': ('wide',), 'fields': _add_fields}),)
 
     filter_horizontal = ()
-
-
-admin.site.register(User, Admin)

@@ -6,6 +6,7 @@ from contents.models import DeckTemplate, CardTemplate, Deck, Card, CardTemplate
     CardFrontContent, CardBackContent, DeckTag
 
 
+@admin.register(DeckTemplate)
 class DeckTemplateAdmin(admin.ModelAdmin):
     """
     Custom deck template admin page
@@ -60,6 +61,7 @@ class CardTemplateBackContentInline(admin.StackedInline):
         return False
 
 
+@admin.register(CardTemplate)
 class CardTemplateAdmin(admin.ModelAdmin, DynamicArrayMixin):
     """
     Custom card template admin page
@@ -81,6 +83,7 @@ class CardTemplateAdmin(admin.ModelAdmin, DynamicArrayMixin):
         return super(CardTemplateAdmin, self).get_readonly_fields(request, obj)
 
 
+@admin.register(Deck)
 class DeckAdmin(admin.ModelAdmin):
     """
     Custom user's (profile's) deck admin page
@@ -138,6 +141,7 @@ class CardBackContentInline(admin.StackedInline):
         return False
 
 
+@admin.register(Card)
 class CardAdmin(admin.ModelAdmin, DynamicArrayMixin):
     """
     Custom user's (profile's) deck's card admin page
@@ -171,8 +175,4 @@ class CardAdmin(admin.ModelAdmin, DynamicArrayMixin):
         return super(CardAdmin, self).get_readonly_fields(request, obj)
 
 
-admin.site.register(DeckTemplate, DeckTemplateAdmin)
-admin.site.register(CardTemplate, CardTemplateAdmin)
-admin.site.register(Deck, DeckAdmin)
-admin.site.register(Card, CardAdmin)
 admin.site.register(DeckTag)
