@@ -342,6 +342,11 @@ class Card(CardMixin):
     def is_succeeded_today(self):
         return self.statistics.last() and self.statistics.last().date == timezone.now().date()
 
+    @property
+    def is_opened_today(self):
+        if self.opened_date:
+            return self.opened_date.date() == timezone.now().date()
+
     def k_increase(self, decrease=False, commit=True):
         if decrease and self.k > 1.0:
             self.k -= 0.1
@@ -356,13 +361,13 @@ class Card(CardMixin):
         self.save()
 
     def perform_action_view(self):
-        if self.state == CardState.STATE_IDLE and self.opened_date:
+        if self.state == CardState.STATE_IDLE and self.is_opened_today:
             self.state = CardState.STATE_VIEWED
             self.save()
             return True
 
     def perform_action_success(self):
-        if not self.is_succeeded_today and self.state == CardState.STATE_GOOD:
+        if not self.is_succeeded_today and self.is_opened_today and self.state == CardState.STATE_GOOD:
             CardSucceededStatistics.objects.get_or_create(card=self, date=timezone.now().date())
             return True
         elif self.state != CardState.STATE_IDLE:
@@ -371,7 +376,7 @@ class Card(CardMixin):
             return True
 
     def perform_action_fail(self):
-        if not self.is_succeeded_today and self.state != CardState.STATE_IDLE:
+        if not self.is_succeeded_today and self.is_opened_today and self.state != CardState.STATE_IDLE:
             self.deck.trigger_fail_statistics(self)
             self.state = CardState.STATE_AGAIN
             self.k_increase(decrease=True, commit=False)
