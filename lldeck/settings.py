@@ -23,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config("SECRET_KEY")
+SECRET_KEY = config("SECRET_KEY", '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS").split(',')
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", '').split(',')
 
 INTERNAL_IPS = [
     "127.0.0.1",
@@ -38,7 +38,7 @@ INTERNAL_IPS = [
 # For requests from browsers (cors)
 # For more info https://pypi.org/project/django-cors-headers/
 
-CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(',')
+CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", 'https://localhost').split(',')
 
 # Models constants
 
@@ -109,11 +109,11 @@ WSGI_APPLICATION = 'lldeck.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': config("DATABASE_NAME"),
-        'USER': config("DATABASE_USERNAME"),
-        'PASSWORD': config("DATABASE_PASSWORD"),
-        'HOST': config("DATABASE_HOST"),
-        'PORT': config("DATABASE_PORT"),
+        'NAME': config("DATABASE_NAME", ''),
+        'USER': config("DATABASE_USERNAME", ''),
+        'PASSWORD': config("DATABASE_PASSWORD", ''),
+        'HOST': config("DATABASE_HOST", ''),
+        'PORT': config("DATABASE_PORT", ''),
     }
 }
 
