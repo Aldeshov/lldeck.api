@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth import password_validation
+from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
@@ -61,7 +62,10 @@ class UserCreationForm(forms.ModelForm):
 
 
 class UserChangeForm(forms.ModelForm):
-
     class Meta:
         model = User
         fields = ('email', 'name', 'phone_number', 'avatar')
+
+
+class LoginForm(AuthenticationForm):
+    remember_me = forms.BooleanField(required=False)

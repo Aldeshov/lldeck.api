@@ -1,15 +1,14 @@
 import logging
 
 from django.contrib.auth import update_session_auth_hash, authenticate, login, logout
-from django.contrib.auth.forms import PasswordChangeForm, AuthenticationForm
+from django.contrib.auth.forms import PasswordChangeForm
 from rest_framework import viewsets, status
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from authentication.forms import UserCreationForm, UserChangeForm
+from authentication.forms import UserCreationForm, UserChangeForm, LoginForm
 from authentication.models import User
 from authentication.serializers import UserSerializer
 
@@ -31,8 +30,6 @@ class UserViewSet(viewsets.ViewSet):
 
 
 class CurrentUser(APIView):
-    authentication_classes = (SessionAuthentication, BasicAuthentication)
-
     def check_permissions(self, request):
         if request.method != 'POST' and not request.user.is_authenticated:
             self.permission_denied(
@@ -53,15 +50,18 @@ class CurrentUser(APIView):
             logger.info("User '%s' logged out" % request.user.name)
             return Response(status=status.HTTP_200_OK)
 
-        form = AuthenticationForm(request, data=request.POST)
+        form = LoginForm(request, data=request.POST or request.data)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
+            remember_me = form.cleaned_data.get('remember_me')
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
                 token, created = Token.objects.get_or_create(user=user)
                 logger.info("User '%s' logged in" % user.name)
+                if not remember_me:
+                    request.session.set_expiry(0)
                 return Response({"token": token.key}, status=status.HTTP_200_OK)
             return Response({"message": "The given credentials are not valid"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)

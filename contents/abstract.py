@@ -14,6 +14,7 @@ class DeckMixin(models.Model):
     Abstract Base class of Deck model
     """
     name = models.CharField(_('Name'), max_length=128, default="<Unnamed deck>")
+    preview = models.ImageField(_('Preview'), upload_to=get_card_content_path, blank=True, null=True)
     tags = models.ManyToManyField(
         to=DECK_TAG_MODEL,
         related_name="%(class)s_list",

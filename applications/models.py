@@ -55,7 +55,7 @@ class Profile(models.Model):
     def cards_learned_today(self):
         count = 0
         for deck in self.decks.all():
-            count += deck.learned_today_count
+            count += deck.stat_learned_today_count
         return count
 
     def __str__(self):

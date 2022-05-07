@@ -38,7 +38,20 @@ INTERNAL_IPS = [
 # For requests from browsers (cors)
 # For more info https://pypi.org/project/django-cors-headers/
 
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", 'https://localhost').split(',')
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "Authorization",
+    "Content-Type",
+    "origin",
+    "user-agent",
+    "X-CSRFToken",
+    "x-requested-with",
+]
 
 # Models constants
 
@@ -169,9 +182,12 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100,
 }
 
 LOGGING = {

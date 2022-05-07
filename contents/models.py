@@ -6,7 +6,7 @@ from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
 from django.core.validators import MinLengthValidator, MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models import Case, When
+from django.db.models import Case, When, Count, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -51,6 +51,10 @@ class DeckTemplateManager(models.Manager):
     Deck Template Manager allows creating templates from existing decks
     * Moved from managers.py due to circular import
     """
+
+    def popular(self):
+        return self.filter(public=True).annotate(Count('downloaded')).annotate(Count('liked')) \
+            .order_by('-downloaded__count', '-liked__count')
 
     def create_from_deck(self, deck):
         deck_template = self.create(name=deck.name, creator=deck.profile, tags=deck.tags)
@@ -182,14 +186,19 @@ class Deck(DeckMixin):
     profile = models.ForeignKey(to=PROFILE_MODEL, on_delete=models.CASCADE, related_name="decks")
 
     @property
-    def learned_today_count(self):
+    def stat_learned_today_count(self):
         stat = self.get_today_statistics()
         return stat.cards_learned_count if stat else 0
 
     @property
-    def failed_today_count(self):
+    def stat_failed_today_count(self):
         stat = self.get_today_statistics()
         return stat.cards_failed_count if stat else 0
+
+    @property
+    def stat_failed_and_not_learned_today_count(self):
+        stat = self.get_today_statistics()
+        return stat.cards_not_yet_learned_but_failed_count if stat else 0
 
     @property
     def learning_today_count(self):
@@ -198,20 +207,15 @@ class Deck(DeckMixin):
             statistics__date=None, state=CardState.STATE_GOOD
         ).count()
 
-    @property
-    def failed_count(self):
-        return self.get_failed_cards().count()
-
     def get_today_statistics(self):
         if self.statistics.last() and self.statistics.last().date == timezone.now().date():
             return self.statistics.last()
 
-    def get_failed_cards(self):
-        return self.cards.filter(state=CardState.STATE_AGAIN)
-
     def get_daily_new_cards(self):
         # Configuration to get daily new cards up to max count
-        max_count = self.profile.aim - (self.learned_today_count + self.learning_today_count + self.failed_count)
+        max_count = self.profile.aim - (
+                self.stat_learned_today_count + self.learning_today_count + self.stat_failed_and_not_learned_today_count
+        )
         priority_list = [CardState.STATE_VIEWED, CardState.STATE_IDLE]
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(priority_list)])
 
@@ -225,13 +229,7 @@ class Deck(DeckMixin):
         return cards
 
     def get_learning_cards(self):
-        # https://stackoverflow.com/questions/431628/how-can-i-combine-two-or-more-querysets-in-a-django-view
-        return list(
-            chain(
-                self.get_failed_cards(),
-                self.cards.filter(statistics__date=None, state=CardState.STATE_GOOD)
-            )
-        )
+        return self.cards.filter(Q(state=CardState.STATE_AGAIN) | Q(statistics__date=None, state=CardState.STATE_GOOD))
 
     def get_to_review_cards(self):
         return self.cards.filter(state=CardState.STATE_GOOD, next_date__lte=timezone.now().date())
@@ -307,6 +305,10 @@ class DeckDailyStatistics(models.Model):
 
     class Meta:
         unique_together = ('deck', 'date')
+
+    @property
+    def cards_not_yet_learned_but_failed_count(self):
+        return self.cards_failed.filter(~Q(id__in=self.cards_learned.all())).count()
 
     @property
     def cards_learned_count(self):

@@ -107,7 +107,7 @@ class DeckAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return 'template', 'profile', 'cards_count', 'learned_today_count', 'date_created', 'date_updated'
+            return 'template', 'profile', 'cards_count', 'stat_learned_today_count', 'date_created', 'date_updated'
         return super(DeckAdmin, self).get_readonly_fields(request, obj)
 
 
