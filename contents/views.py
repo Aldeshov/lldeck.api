@@ -6,7 +6,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 
-from contents.filters import DeckTemplateFilter
+from contents.filters import DeckTemplateFilter, DeckFilter
 from contents.helpers import ProfileCheckHelper, ProfileDeckGetHelper, ProfileDeckCardGetHelper
 from contents.models import DeckTemplate
 from contents.serializers import DeckSerializer, DeckTemplateListSerializer, CardListSerializer, DeckListSerializer, \
@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 class ProfileDeckListAPIView(generics.ListCreateAPIView, ProfileCheckHelper):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = DeckFilter
 
     def get_queryset(self):
         return self.request.user.profile.decks.all()
