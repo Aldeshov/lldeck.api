@@ -40,10 +40,15 @@ class DeckSerializer(DeckMixinSerializer):
     stat_failed_today_count = serializers.ReadOnlyField()
     learning_today_count = serializers.ReadOnlyField()
 
+    daily_new_cards_count = serializers.ReadOnlyField()
+    learning_cards_count = serializers.ReadOnlyField()
+    to_review_cards_count = serializers.ReadOnlyField()
+
     class Meta(DeckMixinSerializer.Meta):
         model = Deck
         fields = DeckMixinSerializer.Meta.fields + (
-            'template', 'favorite', 'stat_learned_today_count', 'stat_failed_today_count', 'learning_today_count'
+            'template', 'favorite', 'stat_learned_today_count', 'stat_failed_today_count', 'learning_today_count',
+            'daily_new_cards_count', 'learning_cards_count', 'to_review_cards_count'
         )
 
     def validate_template(self, value):

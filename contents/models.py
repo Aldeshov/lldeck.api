@@ -228,11 +228,23 @@ class Deck(DeckMixin):
 
         return cards
 
+    @property
+    def daily_new_cards_count(self):
+        return self.get_daily_new_cards().count()
+
     def get_learning_cards(self):
         return self.cards.filter(Q(state=CardState.STATE_AGAIN) | Q(statistics__date=None, state=CardState.STATE_GOOD))
 
+    @property
+    def learning_cards_count(self):
+        return self.get_learning_cards().count()
+
     def get_to_review_cards(self):
         return self.cards.filter(state=CardState.STATE_GOOD, next_date__lte=timezone.now().date())
+
+    @property
+    def to_review_cards_count(self):
+        return self.get_to_review_cards().count()
 
     def trigger_fail_statistics(self, card):
         self.update_statistics(card).cards_failed.add(card)
