@@ -1,6 +1,5 @@
 import logging
 import typing
-from itertools import chain
 
 from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
@@ -57,7 +56,8 @@ class DeckTemplateManager(models.Manager):
             .order_by('-downloaded__count', '-liked__count')
 
     def create_from_deck(self, deck):
-        deck_template = self.create(name=deck.name, creator=deck.profile, tags=deck.tags)
+        deck_template = self.create(name=deck.name, creator=deck.profile)
+        deck_template.tags.set(deck.tags.all())
         for card in deck.cards.all() or []:
             card_template = CardTemplate.objects.create(name=card.name, deck=deck_template)
             try:
