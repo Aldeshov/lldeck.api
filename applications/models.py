@@ -58,5 +58,19 @@ class Profile(models.Model):
             count += deck.stat_learned_today_count
         return count
 
+    @property
+    def minutes_gone_today(self):
+        count = 0
+        for deck in self.decks.all():
+            count += (deck.stat_seconds_gone_today / 60)
+        return count
+
+    @property
+    def total_reviews(self):
+        count = 0
+        for deck in self.decks.all():
+            count += deck.stat_total_reviews
+        return count
+
     def __str__(self):
         return "%s's profile" % self.user.name

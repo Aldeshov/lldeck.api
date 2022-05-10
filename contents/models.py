@@ -186,9 +186,21 @@ class Deck(DeckMixin):
     profile = models.ForeignKey(to=PROFILE_MODEL, on_delete=models.CASCADE, related_name="decks")
 
     @property
+    def stat_total_reviews(self):
+        count = 0
+        for stat in self.statistics.all():
+            count += stat.total_reviews
+        return count
+
+    @property
     def stat_learned_today_count(self):
         stat = self.get_today_statistics()
         return stat.cards_learned_count if stat else 0
+
+    @property
+    def stat_seconds_gone_today(self):
+        stat = self.get_today_statistics()
+        return stat.seconds_gone if stat else 0
 
     @property
     def stat_failed_today_count(self):
@@ -329,6 +341,10 @@ class DeckDailyStatistics(models.Model):
     @property
     def cards_failed_count(self):
         return self.cards_failed.all().count()
+
+    @property
+    def total_reviews(self):
+        return self.cards_learned_count + self.cards_failed_count
 
 
 class Card(CardMixin):

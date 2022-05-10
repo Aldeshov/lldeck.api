@@ -14,7 +14,12 @@ class ProfileStatusSerializer(serializers.ModelSerializer):
     deck_templates_count = serializers.ReadOnlyField()
     downloaded_deck_templates_count = serializers.ReadOnlyField()
     cards_learned_today = serializers.ReadOnlyField()
+    minutes_gone_today = serializers.ReadOnlyField()
+    total_reviews = serializers.ReadOnlyField()
 
     class Meta:
         model = Profile
-        fields = ('id', 'decks_count', 'deck_templates_count', 'downloaded_deck_templates_count', 'cards_learned_today')
+        fields = (
+            'id', 'decks_count', 'deck_templates_count', 'downloaded_deck_templates_count',
+            'cards_learned_today', 'minutes_gone_today', 'total_reviews'
+        )
