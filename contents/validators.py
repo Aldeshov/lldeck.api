@@ -39,7 +39,7 @@ class AudioFileMimeValidator:
         'ogg': ['audio/ogg']
     }
 
-    min_file_size = 8 * 1024  # 8KB
+    min_file_size = 4 * 1024  # 8KB
     max_file_size = 16 * 1024 * 1024  # 16MB
     code_size = 'invalid_size'
 

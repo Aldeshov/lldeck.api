@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 
 from contents.forms import DeckTemplateCreationForm
@@ -18,13 +20,25 @@ class DeckTemplateAdmin(admin.ModelAdmin):
     exclude = ('downloaded', 'liked', 'disliked')
     filter_horizontal = ()
 
+    def cards(self, deck_template):
+        return self.links_to_objects(deck_template.cards.all())
+
+    @classmethod
+    def links_to_objects(cls, cards):
+        card_list = "<ol>"
+        for card in cards:
+            link = reverse("admin:contents_cardtemplate_change", args=[card.id])
+            card_list += "<li><a href='%s'>%s</a></li>" % (link, card.name)
+        card_list += "</ol>"
+        return format_html(card_list)
+
     def save_related(self, request, form, formsets, change):
         if change or form.instance.creator_id:
             return super(DeckTemplateAdmin, self).save_related(request, form, formsets, change)
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return 'creator', 'date_created', 'date_updated', 'cards_count', 'downloads', 'likes', 'dislikes'
+            return 'creator', 'date_created', 'date_updated', 'cards_count', 'cards', 'downloads', 'likes', 'dislikes'
         return super(DeckTemplateAdmin, self).get_readonly_fields(request, obj)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
@@ -93,6 +107,18 @@ class DeckAdmin(admin.ModelAdmin):
     list_display = ('name', 'profile', 'favorite', 'cards_count')
     filter_horizontal = ()
 
+    def cards(self, deck_template):
+        return self.links_to_objects(deck_template.cards.all())
+
+    @classmethod
+    def links_to_objects(cls, cards):
+        card_list = "<ol>"
+        for card in cards:
+            link = reverse("admin:contents_card_change", args=[card.id])
+            card_list += "<li><a href='%s'>%s</a></li>" % (link, card.name)
+        card_list += "</ol>"
+        return format_html(card_list)
+
     def save_related(self, request, form, formsets, change):
         if change or not form.fields.get('template'):
             return super(DeckAdmin, self).save_related(request, form, formsets, change)
@@ -107,7 +133,8 @@ class DeckAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return 'template', 'profile', 'cards_count', 'stat_learned_today_count', 'date_created', 'date_updated'
+            return ('template', 'profile', 'cards_count', 'cards',
+                    'stat_learned_today_count', 'date_created', 'date_updated')
         return super(DeckAdmin, self).get_readonly_fields(request, obj)
 
 
