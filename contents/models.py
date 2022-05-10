@@ -213,9 +213,9 @@ class Deck(DeckMixin):
 
     def get_daily_new_cards(self):
         # Configuration to get daily new cards up to max count
-        max_count = self.profile.aim - (
+        max_count = max(0, self.profile.aim - (
                 self.stat_learned_today_count + self.learning_today_count + self.stat_failed_and_not_learned_today_count
-        )
+        ))
         priority_list = [CardState.STATE_VIEWED, CardState.STATE_IDLE]
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(priority_list)])
 
