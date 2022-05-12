@@ -6,17 +6,21 @@ from contents.models import DeckTemplate, DeckTag, Deck
 
 class DeckTemplateFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
-    tag = filters.CharFilter(method='tag_filter')
+    tag = filters.CharFilter(method='filter')
+    q = filters.CharFilter(method='filter')
 
     class Meta:
         model = DeckTemplate
         fields = ('name', 'tag')
 
     @classmethod
-    def tag_filter(cls, queryset: QuerySet, name, value):
+    def filter(cls, queryset: QuerySet, name, value):
         if name == 'tag':
             tags = DeckTag.objects.filter(name__contains=value.lower())
             return queryset.filter(tags__in=tags)
+        elif name == 'q':
+            tags = DeckTag.objects.filter(name__contains=value.lower())
+            return queryset.filter(Q(tags__in=tags) | Q(name__contains=value.lower()))
 
 
 class DeckFilter(DeckTemplateFilter):

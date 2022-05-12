@@ -16,6 +16,15 @@ def get_card_content_path(instance, filename):
     )
 
 
+def get_deck_preview_path(instance, filename):
+    logger.info("Preview file '%s' was uploaded for deck '%s'" % (filename, instance.name))
+    return os.path.join(
+        "previews",
+        instance.__class__.__name__.lower(),
+        str(uuid.uuid1()) + os.path.splitext(filename)[1]
+    )
+
+
 def random_string(length=32):
     letters = string.ascii_letters + string.digits
     return ''.join(random.choice(letters) for i in range(length))
