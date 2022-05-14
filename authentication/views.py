@@ -46,8 +46,9 @@ class CurrentUser(APIView):
     @classmethod
     def post(cls, request):
         if request.data.get("logout") and request.user.is_authenticated:
+            name = request.user.name
             logout(request)
-            logger.info("User '%s' logged out" % request.user.name)
+            logger.info("User '%s' logged out" % name)
             return Response(status=status.HTTP_200_OK)
 
         form = LoginForm(request, data=request.POST or request.data)

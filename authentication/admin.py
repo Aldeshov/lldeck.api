@@ -14,7 +14,10 @@ class Admin(UserAdmin):
     list_display = ("name", "email", "phone_number", "is_staff")
     add_form = UserCreationForm
     readonly_fields = ('date_joined', 'profile')
-    _fields = ('name', 'email', 'password', 'phone_number', 'date_joined', 'avatar', 'profile', 'is_staff', 'is_active')
+    _fields = (
+        'name', 'email', 'password', 'phone_number', 'date_joined',
+        'avatar', 'profile', 'groups', 'is_staff', 'is_active'
+    )
     _add_fields = ('name', 'email', 'phone_number', 'password1', 'password2')
 
     fieldsets = ((None, {'fields': _fields}),)
