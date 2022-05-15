@@ -78,12 +78,14 @@ class CurrentUser(APIView):
                 return Response(form.data, status=status.HTTP_200_OK)
             return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        form = UserChangeForm(instance=request.user, data=request.data)
+        data = request.data
+        if data.get('avatar'):
+            data.pop('avatar')
+        form = UserChangeForm(instance=request.user, data=data, files=request.FILES)
         if form.is_valid():
-            instance = form.save()
-            serializer = UserSerializer(instance)
+            form.save()
             logger.info("User '%s' has been updated" % request.user.name)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(form.data, status=status.HTTP_200_OK)
         return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @classmethod
