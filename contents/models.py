@@ -56,7 +56,7 @@ class DeckTemplateManager(models.Manager):
             .order_by('-downloaded__count', '-liked__count')
 
     def create_from_deck(self, deck):
-        deck_template = self.create(name=deck.name, creator=deck.profile)
+        deck_template = self.create(name=deck.name, creator=deck.profile, preview=deck.preview)
         deck_template.tags.set(deck.tags.all())
         for card in deck.cards.all() or []:
             card_template = CardTemplate.objects.create(name=card.name, deck=deck_template)
@@ -278,6 +278,7 @@ class Deck(DeckMixin):
         super(Deck, self).save(force_insert, force_update, using, update_fields)
 
         if use_template:
+            self.preview = self.template.preview
             self.tags.set(self.template.tags.all())
             self.template.downloaded.add(self.profile)
             for card_template in self.template.cards.all() or []:
