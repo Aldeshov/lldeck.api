@@ -63,7 +63,7 @@ class DeckTemplateManager(models.Manager):
             try:
                 CardTemplateFrontContent.objects.create(
                     word=card.front_content.word,
-                    helper_text=card.helper_text,
+                    helper_text=card.front_content.helper_text,
                     photo=ImageFile(
                         ContentFile(
                             card.front_content.photo.read(),
